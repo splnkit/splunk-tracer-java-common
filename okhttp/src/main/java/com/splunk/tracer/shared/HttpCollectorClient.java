@@ -1,7 +1,7 @@
 package com.splunk.tracer.shared;
 
-import com.splunk.tracer.grpc.ReportRequest;
-import com.splunk.tracer.grpc.ReportResponse;
+import com.splunk.tracer.transport.ReportRequest;
+import com.splunk.tracer.transport.ReportResponse;
 import com.splunk.tracer.shared.Options.OkHttpDns;
 
 import okhttp3.Dns;
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 class HttpCollectorClient extends CollectorClient {
-    private static final MediaType protoMediaType = MediaType.parse("application/octet-stream");
+    private static final MediaType protoMediaType = MediaType.parse("application/json");
 
     private final AtomicReference<OkHttpClient> client;
     private final AbstractTracer tracer;
@@ -68,8 +68,9 @@ class HttpCollectorClient extends CollectorClient {
     private Request toRequest(ReportRequest request) {
         return new Request.Builder()
                 .url(this.collectorURL)
-                .post(RequestBody.create(protoMediaType, request.toByteArray()))
+                .post(RequestBody.create(protoMediaType, request.toJson()))
                 .addHeader("Authorization", "Splunk " + request.getAuth().getAccessToken())
+                .addHeader("Content-Encoding", "gzip")
                 .build();
     }
 

@@ -1,7 +1,7 @@
 package com.splunk.tracer.shared;
 
-import com.splunk.tracer.grpc.InternalMetrics;
-import com.splunk.tracer.grpc.MetricsSample;
+import com.splunk.tracer.transport.InternalMetrics;
+import com.splunk.tracer.transport.MetricsSample;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,8 +23,8 @@ class ClientMetrics {
     }
 
     InternalMetrics toInternalMetricsAndReset() {
-        return InternalMetrics.newBuilder()
-                .addCounts(MetricsSample.newBuilder()
+        return InternalMetrics.InternalMetricsBuilder()
+                .addCounts(MetricsSample.MetricsSampleBuilder()
                         .setName("spans.dropped")
                         .setIntValue(getAndResetSpansDropped())
                         .build()

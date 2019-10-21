@@ -1,6 +1,7 @@
 package com.splunk.tracer.shared;
 
-import com.splunk.tracer.grpc.KeyValue;
+import com.splunk.tracer.transport.KeyValue;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

@@ -1,7 +1,7 @@
 package com.splunk.tracer.shared;
 
-import com.splunk.tracer.grpc.KeyValue;
-import com.splunk.tracer.grpc.Span.Builder;
+import com.splunk.tracer.transport.KeyValue;
+import com.splunk.tracer.transport.Span.SpBuilder;
 import io.opentracing.tag.Tag;
 import io.opentracing.tag.Tags;
 import io.opentracing.util.ThreadLocalScopeManager;
@@ -121,13 +121,13 @@ public class SpanBuilderTest {
         assertTrue(otSpan instanceof Span);
         Span lsSpan = (Span) otSpan;
 
-        Builder record = lsSpan.getGrpcSpan();
+        SpBuilder record = lsSpan.getGrpcSpan();
 
         List<KeyValue> attributes = record.getTagsList();
-        assertTrue(attributes.contains(KeyValue.newBuilder().setKey("key1").setStringValue("value1").build()));
-        assertTrue(attributes.contains(KeyValue.newBuilder().setKey("key2").setBoolValue(true).build()));
-        assertTrue(attributes.contains(KeyValue.newBuilder().setKey("key3").setIntValue(1001).build()));
-        assertTrue(attributes.contains(KeyValue.newBuilder().setKey(Tags.COMPONENT.getKey()).setStringValue("mytest")
+        assertTrue(attributes.contains(KeyValue.KeyValueBuilder().setKey("key1").setStringValue("value1").build()));
+        assertTrue(attributes.contains(KeyValue.KeyValueBuilder().setKey("key2").setBoolValue(true).build()));
+        assertTrue(attributes.contains(KeyValue.KeyValueBuilder().setKey("key3").setIntValue(1001).build()));
+        assertTrue(attributes.contains(KeyValue.KeyValueBuilder().setKey(Tags.COMPONENT.getKey()).setStringValue("mytest")
                     .build()));
 
         verifyResultingSpan(lsSpan);
@@ -142,7 +142,7 @@ public class SpanBuilderTest {
         assertTrue(otSpan instanceof Span);
         Span lsSpan = (Span) otSpan;
 
-        Builder record = lsSpan.getGrpcSpan();
+        SpBuilder record = lsSpan.getGrpcSpan();
 
         List<KeyValue> attributes = record.getTagsList();
         assertEquals(0, attributes.size());
@@ -242,7 +242,7 @@ public class SpanBuilderTest {
      * Verify values that should be set on the result span regardless of other state.
      */
     private void verifyResultingSpan(Span resultingSpan) {
-        Builder record = resultingSpan.getGrpcSpan();
+        SpBuilder record = resultingSpan.getGrpcSpan();
         SpanContext context = resultingSpan.context();
 
         assertNotEquals(SPAN_ID, context.getSpanId());

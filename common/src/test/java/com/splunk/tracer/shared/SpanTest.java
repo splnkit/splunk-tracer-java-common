@@ -1,8 +1,8 @@
 package com.splunk.tracer.shared;
 
-import com.splunk.tracer.grpc.KeyValue;
-import com.splunk.tracer.grpc.Log;
-import com.splunk.tracer.grpc.Span.Builder;
+import com.splunk.tracer.transport.KeyValue;
+import com.splunk.tracer.transport.Log;
+import com.splunk.tracer.transport.Span.SpBuilder;
 import io.opentracing.tag.BooleanTag;
 import io.opentracing.tag.StringTag;
 import io.opentracing.tag.Tag;
@@ -35,7 +35,7 @@ public class SpanTest {
     private static final long SPAN_ID = 2;
 
     private SpanContext spanContext;
-    private Builder grpcSpan;
+    private SpBuilder grpcSpan;
 
     @Mock
     private AbstractTracer abstractTracer;
@@ -45,7 +45,7 @@ public class SpanTest {
     @Before
     public void setup() {
         spanContext = new SpanContext(TRACE_ID, SPAN_ID, null);
-        grpcSpan = com.splunk.tracer.grpc.Span.newBuilder();
+        grpcSpan = com.splunk.tracer.transport.Span.SpBuilder();
         undertest = new Span(abstractTracer, spanContext, grpcSpan, 0L);
     }
 
@@ -93,14 +93,14 @@ public class SpanTest {
         verifyZeroInteractions(abstractTracer);
         assertNotNull(grpcSpan.getTagsList());
         assertEquals(1, grpcSpan.getTagsCount());
-        assertEquals(KeyValue.newBuilder().setKey("a-key").setStringValue("v").build(), grpcSpan.getTags(0));
+        assertEquals(KeyValue.KeyValueBuilder().setKey("a-key").setStringValue("v").build(), grpcSpan.getTags(0));
 
         result = undertest.setTag(new StringTag("b-key"), "v");
         assertSame(result, undertest);
         verifyZeroInteractions(abstractTracer);
         assertNotNull(grpcSpan.getTagsList());
         assertEquals(2, grpcSpan.getTagsCount());
-        assertEquals(KeyValue.newBuilder().setKey("b-key").setStringValue("v").build(), grpcSpan.getTags(1));
+        assertEquals(KeyValue.KeyValueBuilder().setKey("b-key").setStringValue("v").build(), grpcSpan.getTags(1));
     }
 
     @Test
@@ -118,14 +118,14 @@ public class SpanTest {
         verifyZeroInteractions(abstractTracer);
         assertNotNull(grpcSpan.getTagsList());
         assertEquals(1, grpcSpan.getTagsCount());
-        assertEquals(KeyValue.newBuilder().setKey("a-key").setBoolValue(true).build(), grpcSpan.getTags(0));
+        assertEquals(KeyValue.KeyValueBuilder().setKey("a-key").setBoolValue(true).build(), grpcSpan.getTags(0));
 
         result = undertest.setTag(new BooleanTag("b-key"), true);
         assertSame(result, undertest);
         verifyZeroInteractions(abstractTracer);
         assertNotNull(grpcSpan.getTagsList());
         assertEquals(2, grpcSpan.getTagsCount());
-        assertEquals(KeyValue.newBuilder().setKey("b-key").setBoolValue(true).build(), grpcSpan.getTags(1));
+        assertEquals(KeyValue.KeyValueBuilder().setKey("b-key").setBoolValue(true).build(), grpcSpan.getTags(1));
 
     }
 
@@ -152,7 +152,7 @@ public class SpanTest {
         verifyZeroInteractions(abstractTracer);
         assertNotNull(grpcSpan.getTagsList());
         assertEquals(1, grpcSpan.getTagsCount());
-        assertEquals(KeyValue.newBuilder().setKey("a-key").setIntValue(3).build(), grpcSpan.getTags(0));
+        assertEquals(KeyValue.KeyValueBuilder().setKey("a-key").setIntValue(3).build(), grpcSpan.getTags(0));
     }
 
     @Test
@@ -165,12 +165,12 @@ public class SpanTest {
 
     @Test
     public void testSetTag_Tag() {
-        Span result = undertest.setTag(Tags.COMPONENT, "mytest");
+        Span result = undertest.setTag(Tags.COMPONENT.getKey(), "mytest");
         assertSame(result, undertest);
         verifyZeroInteractions(abstractTracer);
         assertNotNull(grpcSpan.getTagsList());
         assertEquals(1, grpcSpan.getTagsCount());
-        assertEquals(KeyValue.newBuilder().setKey(Tags.COMPONENT.getKey()).setStringValue("mytest").build(),
+        assertEquals(KeyValue.KeyValueBuilder().setKey(Tags.COMPONENT.getKey()).setStringValue("mytest").build(),
                 grpcSpan.getTags(0));
     }
 
@@ -217,7 +217,7 @@ public class SpanTest {
 
         assertNotNull(grpcSpan.getTagsList());
         assertEquals(1, grpcSpan.getTagsCount());
-        assertEquals(KeyValue.newBuilder().setKey(SplunkTracingConstants.Tags.COMPONENT_NAME_KEY).setStringValue("custom").build(), grpcSpan.getTags(0));
+        assertEquals(KeyValue.KeyValueBuilder().setKey(SplunkTracingConstants.Tags.COMPONENT_NAME_KEY).setStringValue("custom").build(), grpcSpan.getTags(0));
     }
 
     @Test
@@ -391,14 +391,6 @@ public class SpanTest {
         assertEquals("", fieldMap.get("mykey1"));
     }
 
-    @Test
-    public void testGenerateTraceURL() {
-        String expecteResult = "https://something.com/";
-        when(abstractTracer.generateTraceURL(SPAN_ID)).thenReturn(expecteResult);
-        String result = undertest.generateTraceURL();
-
-        assertEquals(expecteResult, result);
-    }
 
     @Test
     public void testStringToJSONValue() {

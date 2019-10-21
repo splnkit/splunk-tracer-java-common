@@ -1,8 +1,8 @@
 package com.splunk.tracer.shared;
 
-import com.google.protobuf.Timestamp;
-import com.splunk.tracer.grpc.KeyValue;
-
+import com.splunk.tracer.transport.KeyValue;
+import com.splunk.tracer.transport.Timestamp;
+// import java.sql.Timestamp;
 import java.math.BigInteger;
 import java.util.Random;
 
@@ -37,7 +37,7 @@ class Util {
     }
 
     static Timestamp epochTimeMicrosToProtoTime(long micros) {
-        Timestamp.Builder builder = Timestamp.newBuilder();
+        Timestamp.TimestampBuilder builder = Timestamp.TimestampBuilder();
         builder.setSeconds(micros / 1000000);
         builder.setNanos((int) (micros % 1000000) * 1000);
         return builder.build();
@@ -69,7 +69,7 @@ class Util {
         if (span == null) {
             return true;
         }
-        KeyValue kvp = KeyValue.newBuilder().setKey(SplunkTracingConstants.MetaEvents.MetaEventKey).setBoolValue(true).build();
+        KeyValue kvp = new KeyValue.KeyValueBuilder().setKey(SplunkTracingConstants.MetaEvents.MetaEventKey).setBoolValue(true).build();
         return !span.getGrpcSpan().getTagsList().contains(kvp);
     }
 }

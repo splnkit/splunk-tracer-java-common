@@ -1,8 +1,8 @@
 package com.splunk.tracer.shared;
 
-import com.splunk.tracer.grpc.KeyValue;
-import com.splunk.tracer.grpc.Log;
-import com.splunk.tracer.grpc.Span.Builder;
+import com.splunk.tracer.transport.KeyValue;
+import com.splunk.tracer.transport.Log;
+import com.splunk.tracer.transport.Span.SpBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,11 +15,11 @@ public class Span implements io.opentracing.Span {
     private final Object mutex = new Object();
     private final AbstractTracer tracer;
     private final long startTimestampRelativeNanos;
-    private final Builder grpcSpan;
+    private final SpBuilder grpcSpan;
 
     private SpanContext context;
 
-    Span(AbstractTracer tracer, SpanContext context, Builder grpcSpan, long startTimestampRelativeNanos) {
+    Span(AbstractTracer tracer, SpanContext context, SpBuilder grpcSpan, long startTimestampRelativeNanos) {
         this.context = context;
         this.tracer = tracer;
         this.grpcSpan = grpcSpan;
@@ -70,7 +70,7 @@ public class Span implements io.opentracing.Span {
             return this;
         }
         synchronized (mutex) {
-            grpcSpan.addTags(KeyValue.newBuilder().setKey(key).setStringValue(value));
+            grpcSpan.addTags(KeyValue.KeyValueBuilder().setKey(key).setStringValue(value).build());
         }
         return this;
     }
@@ -82,7 +82,7 @@ public class Span implements io.opentracing.Span {
             return this;
         }
         synchronized (mutex) {
-            grpcSpan.addTags(KeyValue.newBuilder().setKey(key).setBoolValue(value));
+            grpcSpan.addTags(KeyValue.KeyValueBuilder().setKey(key).setBoolValue(value).build());
         }
         return this;
     }
@@ -95,13 +95,13 @@ public class Span implements io.opentracing.Span {
         }
         synchronized (mutex) {
             if (value instanceof Long || value instanceof Integer) {
-                grpcSpan.addTags(KeyValue.newBuilder().setKey(key).setIntValue(value.longValue()));
+                grpcSpan.addTags(KeyValue.KeyValueBuilder().setKey(key).setIntValue(value.longValue()).build());
             } else if (value instanceof Double || value instanceof Float) {
                 grpcSpan
-                    .addTags(KeyValue.newBuilder().setKey(key).setDoubleValue(value.doubleValue()));
+                    .addTags(KeyValue.KeyValueBuilder().setKey(key).setDoubleValue(value.doubleValue()).build());
             } else {
                 grpcSpan
-                    .addTags(KeyValue.newBuilder().setKey(key).setStringValue(value.toString()));
+                    .addTags(KeyValue.KeyValueBuilder().setKey(key).setStringValue(value.toString()).build());
             }
         }
         return this;
@@ -157,7 +157,7 @@ public class Span implements io.opentracing.Span {
 
     @Override
     public final Span log(long timestampMicros, Map<String, ?> fields) {
-        com.splunk.tracer.grpc.Log.Builder log = Log.newBuilder()
+        com.splunk.tracer.transport.Log.LogBuilder log = Log.LogBuilder()
             .setTimestamp(Util.epochTimeMicrosToProtoTime(timestampMicros));
         for (Map.Entry<String, ?> kv : fields.entrySet()) {
             String key = kv.getKey();
@@ -170,7 +170,7 @@ public class Span implements io.opentracing.Span {
                 value = ""; // Fallback
             }
 
-            final KeyValue.Builder outKV = KeyValue.newBuilder().setKey(key);
+            final KeyValue.KeyValueBuilder outKV = KeyValue.KeyValueBuilder().setKey(key);
             final Object inValue = value;
 
             if (inValue instanceof String) {
@@ -214,11 +214,6 @@ public class Span implements io.opentracing.Span {
             fields.put("payload", payload);
         }
         return log(timestampMicroseconds, fields);
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public String generateTraceURL() {
-        return tracer.generateTraceURL(context.getSpanId());
     }
 
     private long nowMicros() {
@@ -297,7 +292,7 @@ public class Span implements io.opentracing.Span {
      * For unit testing in JRE test.
      */
     @SuppressWarnings("WeakerAccess")
-    public Builder getGrpcSpan() {
+    public SpBuilder getGrpcSpan() {
         return grpcSpan;
     }
 }

@@ -8,6 +8,7 @@ public final class SplunkTracingConstants {
 
         public static final String LEGACY_COMPONENT_NAME_KEY = "component_name";
         public static final String COMPONENT_NAME_KEY = "component_name";
+        public static final String COMPONENT = "component_name";
         public static final String GUID_KEY = "guid";
     }
 

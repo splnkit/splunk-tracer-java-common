@@ -29,7 +29,7 @@
         <developer>
             <id>splunk</id>
             <name>Splunk</name>
-            <email>hello@splunk.com</email>
+            <email>dev@splunk.com</email>
         </developer>
     </developers>
 
@@ -52,7 +52,6 @@
     </properties>
 
     <modules>
-        <module>grpc</module>
         <module>okhttp</module>
         <module>common</module>
         <module>example</module>

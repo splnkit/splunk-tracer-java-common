@@ -87,8 +87,8 @@ public class SpanContext implements io.opentracing.SpanContext {
     }
 
     @SuppressWarnings("WeakerAccess")
-    public com.splunk.tracer.grpc.SpanContext getInnerSpanCtx() {
-        return com.splunk.tracer.grpc.SpanContext.newBuilder()
+    public com.splunk.tracer.transport.SpanContext getInnerSpanCtx() {
+        return com.splunk.tracer.transport.SpanContext.SpanContextBuilder()
                 .setTraceId(this.getTraceId())
                 .setSpanId(this.getSpanId())
                 .putAllBaggage(this.baggage)

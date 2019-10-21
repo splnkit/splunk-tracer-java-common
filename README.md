@@ -14,10 +14,6 @@ Contains the `com.splunk.tracer.shared` (shared logic) and `com.splunk.tracer.gr
 
 Contains an example implementation of the tracer (used for integration testing).
 
-## grpc
-
-Contains the transport layer specific to the grpc flavor of the splunk tracer.
-
 ## okhttp
 
 Contains the transport layer specific to the okhttp flavor of the splunk tracer.

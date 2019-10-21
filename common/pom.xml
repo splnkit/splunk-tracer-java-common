@@ -64,14 +64,9 @@
             <version>${io.opentracing.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>${com.google.protobuf.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.api.grpc</groupId>
-            <artifactId>grpc-google-common-protos</artifactId>
-            <version>${com.google.api.version}</version>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
         </dependency>
 
 

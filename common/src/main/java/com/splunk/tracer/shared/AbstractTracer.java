@@ -1,12 +1,11 @@
 package com.splunk.tracer.shared;
 
-import com.splunk.tracer.grpc.Auth;
-import com.splunk.tracer.grpc.Command;
-import com.splunk.tracer.grpc.KeyValue;
-import com.splunk.tracer.grpc.ReportRequest;
-import com.splunk.tracer.grpc.ReportResponse;
-import com.splunk.tracer.grpc.Reporter;
-import com.splunk.tracer.grpc.Span;
+import com.splunk.tracer.transport.Auth;
+import com.splunk.tracer.transport.KeyValue;
+import com.splunk.tracer.transport.ReportRequest;
+import com.splunk.tracer.transport.ReportResponse;
+import com.splunk.tracer.transport.Reporter;
+import com.splunk.tracer.transport.Span;
 import io.opentracing.Scope;
 import io.opentracing.ScopeManager;
 import io.opentracing.Tracer;
@@ -81,8 +80,8 @@ public abstract class AbstractTracer implements Tracer, Closeable {
     }
 
     private final int verbosity;
-    private final Auth.Builder auth;
-    private final Reporter.Builder reporter;
+    private final Auth auth;
+    private final Reporter reporter;
     private final CollectorClient client;
     private final ClientMetrics clientMetrics;
 
@@ -113,8 +112,6 @@ public abstract class AbstractTracer implements Tracer, Closeable {
     private Thread reportingThread;
 
     private boolean isDisabled;
-
-    private boolean resetClient;
 
     private final ScopeManager scopeManager;
 
@@ -147,9 +144,8 @@ public abstract class AbstractTracer implements Tracer, Closeable {
             clockState = new ClockState.NoopClockState();
         }
 
-        auth = Auth.newBuilder().setAccessToken(options.accessToken);
-        reporter = Reporter.newBuilder().setReporterId(options.getGuid());
-        resetClient = options.resetClient;
+        auth = new Auth.AuthBuilder(options.accessToken).build();
+        reporter = new Reporter.ReporterBuilder(options.getGuid()).build();
         clientMetrics = new ClientMetrics();
 
         // initialize collector client
@@ -250,7 +246,7 @@ public abstract class AbstractTracer implements Tracer, Closeable {
                 // no new data to report or, for example, the Android device does
                 // not have a wireless connection.
                 long nowMillis = System.currentTimeMillis();
-                if (resetClient && nowMillis >= nextResetMillis) {
+                if (nowMillis >= nextResetMillis) {
                     client.reconnect();
                     nextResetMillis = System.currentTimeMillis() + DEFAULT_CLIENT_RESET_INTERVAL_MILLIS;
                 }
@@ -519,7 +515,7 @@ public abstract class AbstractTracer implements Tracer, Closeable {
             }
         }
 
-        ReportRequest request = ReportRequest.newBuilder()
+        ReportRequest request = ReportRequest.ReportRequestBuilder()
                 .setReporter(reporter)
                 .setAuth(auth)
                 .addAllSpans(spans)
@@ -539,39 +535,24 @@ public abstract class AbstractTracer implements Tracer, Closeable {
             return ReportResult.Error(spans.size());
         }
 
-        if (!response.getErrorsList().isEmpty()) {
-            List<String> errs = response.getErrorsList();
-            for (String err : errs) {
-                this.error("Collector response contained error: ", err);
-            }
+        if (response.getText() != "Success") {
+            String err = response.getText();
+            this.error("Collector response contained error: ", err);
             return ReportResult.Error(spans.size());
         }
 
-        if (response.hasReceiveTimestamp() && response.hasTransmitTimestamp()) {
-            long deltaMicros = (System.nanoTime() - originRelativeNanos) / 1000;
-            long destinationMicros = originMicros + deltaMicros;
-            clockState.addSample(
-                    originMicros,
-                    Util.protoTimeToEpochMicros(response.getReceiveTimestamp()),
-                    Util.protoTimeToEpochMicros(response.getTransmitTimestamp()),
-                    destinationMicros
-            );
-        } else {
-            warn("Collector response did not include timing info");
-        }
-
-        // Check whether or not to disable the tracer
-        if (response.getCommandsCount() != 0) {
-            for (Command command : response.getCommandsList()) {
-                if (command.getDisable()) {
-                    disable();
-                } else if (command.getDevMode()) {
-                    if (!disableMetaEventLogging) {
-                        metaEventLoggingEnabled = true;
-                    }
-                }
-            }
-        }
+        // if (response.hasReceiveTimestamp() && response.hasTransmitTimestamp()) {
+        //     long deltaMicros = (System.nanoTime() - originRelativeNanos) / 1000;
+        //     long destinationMicros = originMicros + deltaMicros;
+        //     clockState.addSample(
+        //             originMicros,
+        //             Util.protoTimeToEpochMicros(response.getReceiveTimestamp()),
+        //             Util.protoTimeToEpochMicros(response.getTransmitTimestamp()),
+        //             destinationMicros
+        //     );
+        // } else {
+        //     warn("Collector response did not include timing info");
+        // }
 
         debug(String.format("Report sent successfully (%d spans)", spans.size()));
 
@@ -600,19 +581,19 @@ public abstract class AbstractTracer implements Tracer, Closeable {
     protected void addTracerTag(String key, Object value) {
         debug("Adding tracer tag: " + key + " => " + value);
         if (value instanceof String) {
-            reporter.addTags(KeyValue.newBuilder().setKey(key).setStringValue((String) value));
+            reporter.addTags(KeyValue.KeyValueBuilder().setKey(key).setStringValue((String) value).build());
         } else if (value instanceof Boolean) {
-            reporter.addTags(KeyValue.newBuilder().setKey(key).setBoolValue((Boolean) value));
+            reporter.addTags(KeyValue.KeyValueBuilder().setKey(key).setBoolValue((Boolean) value).build());
         } else if (value instanceof Number) {
             if (value instanceof Long || value instanceof Integer) {
-                reporter.addTags(KeyValue.newBuilder().setKey(key).setIntValue(((Number) value).longValue()));
+                reporter.addTags(KeyValue.KeyValueBuilder().setKey(key).setIntValue(((Number) value).longValue()).build());
             } else if (value instanceof Double || value instanceof Float) {
-                reporter.addTags(KeyValue.newBuilder().setKey(key).setDoubleValue(((Number) value).doubleValue()));
+                reporter.addTags(KeyValue.KeyValueBuilder().setKey(key).setDoubleValue(((Number) value).doubleValue()).build());
             } else {
-                reporter.addTags(KeyValue.newBuilder().setKey(key).setStringValue(value.toString()));
+                reporter.addTags(KeyValue.KeyValueBuilder().setKey(key).setStringValue(value.toString()).build());
             }
         } else {
-            reporter.addTags(KeyValue.newBuilder().setKey(key).setStringValue(value.toString()));
+            reporter.addTags(KeyValue.KeyValueBuilder().setKey(key).setStringValue(value.toString()).build());
         }
     }
 
@@ -698,12 +679,6 @@ public abstract class AbstractTracer implements Tracer, Closeable {
 
     protected abstract void printLogToConsole(InternalLogLevel level, String msg, Object payload);
 
-
-    String generateTraceURL(long spanId) {
-        return "https://app.splunk.com/" + auth.getAccessToken() +
-                "/trace?span_guid=" + Long.toHexString(spanId) +
-                "&at_micros=" + Util.nowMicrosApproximate();
-    }
 
     /**
      * Internal method used primarily for unit testing and debugging. This is not

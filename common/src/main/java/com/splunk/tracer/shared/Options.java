@@ -60,7 +60,7 @@ public final class Options {
 
     static final String HTTP = "http";
 
-    static final String COLLECTOR_PATH = "/api/v2/reports";
+    static final String COLLECTOR_PATH = "/services/collector";
 
     // BUILTIN PROPAGATORS
     static final Map<Format<?>, Propagator> BUILTIN_PROPAGATORS = Collections.unmodifiableMap(
@@ -128,14 +128,10 @@ public final class Options {
     final int maxBufferedSpans;
     final int verbosity;
     final boolean disableReportingLoop;
-    // reset GRPC client at regular intervals (for load balancing)
-    final boolean resetClient;
+
     final boolean useClockCorrection;
     final ScopeManager scopeManager;
     final Map<Format<?>, Propagator> propagators;
-
-    final String grpcCollectorTarget;
-    final boolean grpcRoundRobin;
 
     final OkHttpDns okhttpDns;
 
@@ -151,14 +147,11 @@ public final class Options {
             int maxBufferedSpans,
             int verbosity,
             boolean disableReportingLoop,
-            boolean resetClient,
             Map<String, Object> tags,
             boolean useClockCorrection,
             ScopeManager scopeManager,
             long deadlineMillis,
             Map<Format<?>, Propagator> propagators,
-            String grpcCollectorTarget,
-            boolean grpcRoundRobin,
             OkHttpDns okhttpDns,
             boolean disableMetaEventLogging
     ) {
@@ -168,14 +161,11 @@ public final class Options {
         this.maxBufferedSpans = maxBufferedSpans;
         this.verbosity = verbosity;
         this.disableReportingLoop = disableReportingLoop;
-        this.resetClient = resetClient;
         this.tags = tags;
         this.useClockCorrection = useClockCorrection;
         this.scopeManager = scopeManager;
         this.deadlineMillis = deadlineMillis;
         this.propagators = propagators;
-        this.grpcCollectorTarget = grpcCollectorTarget;
-        this.grpcRoundRobin = grpcRoundRobin;
         this.okhttpDns = okhttpDns;
         this.disableMetaEventLogging = disableMetaEventLogging;
     }
@@ -194,15 +184,12 @@ public final class Options {
         private int maxBufferedSpans = -1;
         private int verbosity = 1;
         private boolean disableReportingLoop = false;
-        private boolean resetClient = true;
         private boolean useClockCorrection = true;
         private Map<String, Object> tags = new HashMap<>();
         private ScopeManager scopeManager;
         private long deadlineMillis = -1;
         private Map<Format<?>, Propagator> propagators = new HashMap<>();
         private boolean disableMetaEventLogging = false;
-        private String grpcCollectorTarget;
-        private boolean grpcRoundRobin = false;
         private OkHttpDns okhttpDns;
 
         public OptionsBuilder() {
@@ -217,15 +204,12 @@ public final class Options {
             this.maxBufferedSpans = options.maxBufferedSpans;
             this.verbosity = options.verbosity;
             this.disableReportingLoop = options.disableReportingLoop;
-            this.resetClient = options.resetClient;
             this.tags = options.tags;
             this.scopeManager = options.scopeManager;
             this.useClockCorrection = options.useClockCorrection;
             this.deadlineMillis = options.deadlineMillis;
             this.propagators = options.propagators;
             this.disableMetaEventLogging = options.disableMetaEventLogging;
-            this.grpcCollectorTarget = options.grpcCollectorTarget;
-            this.grpcRoundRobin = options.grpcRoundRobin;
             this.okhttpDns = options.okhttpDns;
         }
 
@@ -315,37 +299,6 @@ public final class Options {
                 throw new IllegalArgumentException("Invalid collector port: " + collectorPort);
             }
             this.collectorPort = collectorPort;
-            return this;
-        }
-
-
-        /**
-         * Sets the target address when using gRPC for transport. Useful when used in conjunction
-         * with supplying a custom gRPC NameResolverProvider to lookup the HEC host via your
-         * preferred service discovery system.
-         *
-         * @param grpcCollectorTarget The target URI for the SplunkTracing collector.
-         * @throws IllegalArgumentException If the grpcCollectorTarget is invalid.
-         */
-        public OptionsBuilder withGrpcCollectorTarget(String grpcCollectorTarget) {
-            if (grpcCollectorTarget == null) {
-                throw new IllegalArgumentException(
-                  "Invalid grpc collector target: " + grpcCollectorTarget);
-            }
-            this.grpcCollectorTarget = grpcCollectorTarget;
-            return this;
-        }
-
-        /**
-         * Instructs gRPC to round-robin between satellites instances in a pool when sending traces.
-         * If not enabled defaults to picking the first record returned by the operating system
-         * resolver.
-         *
-         * @param grpcRoundRobin Use round robin on a per request basis when sending requests to
-         *                       the satellites.
-         */
-        public OptionsBuilder withGrpcRoundRobin(boolean grpcRoundRobin) {
-            this.grpcRoundRobin = grpcRoundRobin;
             return this;
         }
 
@@ -448,14 +401,6 @@ public final class Options {
             return this;
         }
 
-        /**
-         * If true, the GRPC client connection will be reset at regular intevals
-         * Used to load balance on server side
-         */
-        public OptionsBuilder withResetClient(boolean reset) {
-            this.resetClient = reset;
-            return this;
-        }
 
         /**
          * Overrides the default deadlineMillis with the provided value.
@@ -504,14 +449,11 @@ public final class Options {
                     maxBufferedSpans,
                     verbosity,
                     disableReportingLoop,
-                    resetClient,
                     tags,
                     useClockCorrection,
                     scopeManager,
                     deadlineMillis,
                     propagators,
-                    grpcCollectorTarget,
-                    grpcRoundRobin,
                     okhttpDns,
                     disableMetaEventLogging
             );
@@ -615,19 +557,4 @@ public final class Options {
         }
     }
 
-    /**
-     * Provided so implementations of AbstractTracer can turn off resetClient by default.
-     * For example, Android tracer may not want resetClient.
-     */
-    @SuppressWarnings("unused")
-    public Options disableResetClient() {
-        try {
-            return new OptionsBuilder(this).withResetClient(false).build();
-        } catch (MalformedURLException e) {
-            // not possible given that we are constructing Options from a valid set of Options
-            throw new IllegalArgumentException("Unexpected error when building a new set of" +
-                "options from a valid set of existing options. collectorUrl=" +
-                this.collectorUrl);
-        }
-    }
 }

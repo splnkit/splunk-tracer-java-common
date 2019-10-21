@@ -1,7 +1,7 @@
 package com.splunk.tracer.shared;
 
-import com.splunk.tracer.grpc.Reference;
-import com.splunk.tracer.grpc.Reference.Relationship;
+import com.splunk.tracer.transport.Reference;
+import com.splunk.tracer.transport.Reference.Relationship;
 import io.opentracing.Scope;
 import io.opentracing.Tracer;
 
@@ -26,7 +26,7 @@ public class SpanBuilder implements Tracer.SpanBuilder {
     private long startTimestampMicros;
     private boolean ignoringActiveSpan;
 
-    private final com.splunk.tracer.grpc.Span.Builder grpcSpan = com.splunk.tracer.grpc.Span.newBuilder();
+    private final com.splunk.tracer.transport.Span.SpBuilder grpcSpan = com.splunk.tracer.transport.Span.SpBuilder();
 
     SpanBuilder(String operationName, AbstractTracer tracer) {
         this.operationName = operationName;
@@ -53,14 +53,14 @@ public class SpanBuilder implements Tracer.SpanBuilder {
     public Tracer.SpanBuilder addReference(String type, io.opentracing.SpanContext referredTo) {
         if (referredTo != null && (CHILD_OF.equals(type) || FOLLOWS_FROM.equals(type))) {
             parent = (SpanContext) referredTo;
-            Reference.Builder refBuilder = Reference.newBuilder();
+            Reference.ReferenceBuilder refBuilder = Reference.ReferenceBuilder();
             refBuilder.setSpanContext(parent.getInnerSpanCtx());
             if (CHILD_OF.equals(type)) {
                 refBuilder.setRelationship(Relationship.CHILD_OF);
             } else {
                 refBuilder.setRelationship(Relationship.FOLLOWS_FROM);
             }
-            grpcSpan.addReferences(refBuilder);
+            grpcSpan.addReferences(refBuilder.build());
         }
         return this;
     }
