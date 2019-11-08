@@ -5,6 +5,8 @@ import com.splunk.tracer.transport.InternalMetrics;
 import com.splunk.tracer.transport.KeyValue;
 import com.splunk.tracer.transport.Reporter;
 import com.splunk.tracer.transport.Span;
+import com.splunk.tracer.transport.Log;
+
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -174,7 +176,7 @@ public final class ReportRequest {
             Timestamp ts = span.getStartTimestamp();
 //            long duration =
             
-            convertedSpan.put("time", String.format("%d.%d", ts.getSeconds(), ts.getNanos())); //+ ts.getNanos()/1000000000);
+            convertedSpan.put("time", ts.toString()); //+ ts.getNanos()/1000000000);
             convertedSpan.put("sourcetype", "splunktracing:span");
             JSONObject event_obj = new JSONObject();
             event_obj.put("operation_name", span.getOperationName());
@@ -182,69 +184,71 @@ public final class ReportRequest {
             event_obj.put("span_id", Long.toHexString(span_id));
             event_obj.put("parent_span_id", Long.toHexString(parent_span_id));
             event_obj.put("guid", Long.toHexString(guid));
-            event_obj.put("timestamp", ts.getSeconds() + ts.getNanos()/1000000000);
+            event_obj.put("timestamp", ts.toString());
             event_obj.put("duration", span.getDurationMicros());
-            // event_obj.put("tags", new JsonObject(DictToJson(span.Tags)));
-            // event_obj.put("baggage", new JsonObject(StringDictToJson(span.Context.GetBaggage())));
-            // event_obj.put("device", reporter.Tags["device"].ToString());
-            // event_obj.put("component_name", reporter.Tags["component_name"].ToString());
-            // event_obj.put("tracer_platform_version", reporter.Tags["tracer_platform_version"].ToString());
-            // event_obj.put("tracer_platform", reporter.Tags["tracer_platform"].ToString());
-            // event_obj.put("tracer_version", reporter.Tags["tracer_version"].ToString());
+            event_obj.put("tags", MergeSpanReporterTags(span.getTagsList()));
+            event_obj.put("baggage", new JSONObject(span.getSpanContext().getBaggage()));
+            event_obj.put("device", reporter_.getTag("device"));
+            event_obj.put("component_name", reporter_.getTag("component_name"));
+            event_obj.put("tracer_platform_version", reporter_.getTag("tracer_platform_version"));
+            event_obj.put("tracer_platform", reporter_.getTag("tracer_platform"));
+            event_obj.put("tracer_version", reporter_.getTag("tracer_version"));
             convertedSpan.put("event", event_obj);
             event_obj_list.add(convertedSpan.toString());
+
+            for (Log log : span.getLogsList())
+            {
+                JSONObject convertedLog = new JSONObject();
+                Timestamp lts = log.getTimestamp();
+                convertedLog.put("time", lts.toString());  //String.format("%d.%09d", lts.getSeconds(), lts.getNanos()));
+                convertedLog.put("sourcetype", "splunktracing:log");
+                JSONObject log_obj = new JSONObject();
+                log_obj.put("operation_name", span.getOperationName());
+                log_obj.put("trace_id", Long.toHexString(trace_id));
+                log_obj.put("span_id", Long.toHexString(span_id));
+                log_obj.put("parent_span_id", Long.toHexString(parent_span_id));
+                log_obj.put("guid", Long.toHexString(guid));
+                log_obj.put("timestamp", lts.toString());
+                log_obj.put("tags", MergeSpanReporterTags(span.getTagsList()));
+                log_obj.put("baggage", new JSONObject(span.getSpanContext().getBaggage()));
+                log_obj.put("device", reporter_.getTag("device"));
+                log_obj.put("component_name", reporter_.getTag("component_name"));
+                log_obj.put("tracer_platform_version", reporter_.getTag("tracer_platform_version"));
+                log_obj.put("tracer_platform", reporter_.getTag("tracer_platform"));
+                log_obj.put("tracer_version", reporter_.getTag("tracer_version"));
+                log_obj.put("fields", DictToJson(log.getFields()));
+                convertedLog.put("event", log_obj);
+
+                event_obj_list.add(convertedLog.toString());
+            }
         }
         String json_content = String.join("\n", event_obj_list);
         return toReportContent(json_content);
     }
 
+    public static JSONObject DictToJson(List<KeyValue> thing)
+    {
+        JSONObject out_obj = new JSONObject();
+        for (KeyValue kvpair : thing)
+        {
+          out_obj.put(kvpair.getKey(),kvpair.getValue());
+        }
+        return out_obj;
+    }
+
+    public JSONObject MergeSpanReporterTags(List<KeyValue> thing)
+    {
+        JSONObject out_obj = DictToJson(thing);
+
+        for (KeyValue rtag : reporter_.getTagsList())
+            {
+                String k  = rtag.getKey();
+                if ( k != "device" && k != "component_name" && k != "tracer_platform_version" && k != "tracer_platform" && k != "tracer_version")
+                {
+                    out_obj.put(rtag.getKey(),rtag.getValue());
+                }
+            }
+        return out_obj;
+    }
+
 }
-
-        // var event_obj_list = new List<string>();
-        // var epochZero = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero); 
-        // var convertedSpan = new JsonObject();
-        // convertedSpan.Add("time", (span.StartTimestamp.UtcTicks - epochZero.UtcTicks) / 10000000.0);
-        // convertedSpan.Add("sourcetype", "splunktracing:span");
-        // convertedSpan.Add("event", new JsonObject() {
-        //   ["component_name"] = reporter.Tags["component_name"].ToString(),
-        //   ["operation_name"] = span.OperationName,
-        //   ["tracer_platform_version"] = reporter.Tags["tracer_platform_version"].ToString(),
-        //   ["tracer_platform"] = reporter.Tags["tracer_platform"].ToString(),
-        //   ["tracer_version"] = reporter.Tags["tracer_version"].ToString(),
-        //   ["trace_id"] = Utilities.IdToHex(span.Context.TraceId),
-        //   ["span_id"] = Utilities.IdToHex(span.Context.SpanId),
-        //   ["parent_span_id"] = Utilities.IdToHex(span.Context.ParentSpanId),
-        //   ["device"] = reporter.Tags["device"].ToString(),
-        //   ["guid"] = reporter.ReporterId,
-        //   ["timestamp"] = (span.StartTimestamp.UtcTicks - epochZero.UtcTicks) / 10000000.0,  //UtcTicks
-        //   ["duration"] = Convert.ToUInt64(Math.Abs(span.Duration.Ticks) / 10),
-        //   ["tags"] = new JsonObject(DictToJson(span.Tags)), //span.Tags
-        //   ["baggage"] = new JsonObject(StringDictToJson(span.Context.GetBaggage())), // span.Context.GetBaggage()
-        //   }
-        // );
-        // event_obj_list.Add(convertedSpan.ToString());
-        // foreach (var log in span.LogData)
-        // {
-        //   var log_obj = new JsonObject();
-        //   log_obj.Add("time", (log.Timestamp.UtcTicks - epochZero.UtcTicks) / 10000000.0);
-        //   log_obj.Add("sourcetype", "splunktracing:log");
-        //   log_obj.Add("event", new JsonObject() {
-        //     ["component_name"] = reporter.Tags["component_name"].ToString(),
-        //     ["operation_name"] = span.OperationName,
-        //     ["tracer_platform_version"] = reporter.Tags["tracer_platform_version"].ToString(),
-        //     ["tracer_platform"] = reporter.Tags["tracer_platform"].ToString(),
-        //     ["tracer_version"] = reporter.Tags["tracer_version"].ToString(),
-        //     ["trace_id"] = Utilities.IdToHex(span.Context.TraceId),
-        //     ["span_id"] = Utilities.IdToHex(span.Context.SpanId),
-        //     ["parent_span_id"] = Utilities.IdToHex(span.Context.ParentSpanId),
-        //     ["device"] = reporter.Tags["device"].ToString(),
-        //     ["guid"] = reporter.ReporterId,
-        //     ["timestamp"] = (log.Timestamp.UtcTicks - epochZero.UtcTicks) / 10000000.0,
-        //     ["tags"] = new JsonObject(DictToJson(span.Tags)),
-        //     ["baggage"] = new JsonObject(StringDictToJson(span.Context.GetBaggage())), 
-        //     ["fields"] = new JsonObject(LogFieldsToJson(log.Fields)),
-        //   });
-        //   event_obj_list.Add(log_obj.ToString());
-        // }
-
-        // return string.Join("\n", event_obj_list);

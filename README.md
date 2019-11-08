@@ -8,7 +8,7 @@ see [splunk-tracer-java](https://github.com/splunk/splunk-tracer-java) or
 
 ## common
 
-Contains the `com.splunk.tracer.shared` (shared logic) and `com.splunk.tracer.grpc` (shared compiled proto files) source files and assets for the JRE and Android libraries.
+Contains the `com.splunk.tracer.shared` (shared logic) source files and assets for the JRE and Android libraries.
 
 ## example
 

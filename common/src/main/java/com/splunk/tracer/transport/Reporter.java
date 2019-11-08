@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public final class Reporter { 
    
     private final Long reporter_id_;
-    private final List<KeyValue> tags_;
+    private List<KeyValue> tags_;
 
     public Reporter() {
         reporter_id_ = 0L;
@@ -28,12 +28,23 @@ public final class Reporter {
         return tags_;
     }
 
+    public Object getTag(String key) {
+        for (KeyValue tag_pair : tags_)
+        {
+            if (key == tag_pair.getKey()) 
+            {
+                return tag_pair.getValue();
+            }
+        }
+        return "";
+    }
+
     public List<KeyValue> getTagsList() {
         return tags_;
     }
 
     public void addTags(KeyValue tag) {
-        this.tags_.add(tag);
+        tags_.add(tag);
     }
 
     public static class ReporterBuilder {
@@ -46,6 +57,7 @@ public final class Reporter {
 
         public ReporterBuilder(Long id) {
             this.reporter_id_ = id;
+            this.tags_ = new ArrayList();
         }
         public ReporterBuilder setReporterId(Long id) {
             this.reporter_id_ = id;

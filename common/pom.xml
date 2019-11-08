@@ -5,7 +5,7 @@
     <parent>
         <artifactId>java</artifactId>
         <groupId>com.splunk.tracer</groupId>
-        <version>0.17.2</version>
+        <version>0.0.5</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -13,12 +13,10 @@
 
     <name>java-common</name>
     <description>The Splunk OpenTracing Tracer implementation for Java</description>
-    <url>https://github.com/splunk/splunk-tracer-java-common</url>
+    <url>https://github.com/splnkit/splunk-tracer-java-common</url>
 
     <properties>
         <io.opentracing.version>0.32.0</io.opentracing.version>
-        <com.google.protobuf.version>3.5.1</com.google.protobuf.version>
-        <com.google.api.version>1.12.0</com.google.api.version>
     </properties>
 
     <build>

@@ -65,7 +65,7 @@ public final class Timestamp {
   
     @Override
     public String toString() 
-    { 
-        return "id = name = "; 
+    {
+        return String.format("%d.%09d", seconds_, nanoseconds_);
     } 
 }

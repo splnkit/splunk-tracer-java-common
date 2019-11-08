@@ -21,7 +21,7 @@ echo "Publishing $VERSION"
 mvn deploy
 
 # Sign the jar and other files in Bintray
-curl -H "X-GPG-PASSPHRASE:$BINTRAY_GPG_PASSPHRASE" -u $BINTRAY_USER:$BINTRAY_API_KEY -X POST https://api.bintray.com/gpg/splunk/maven/java-common/versions/$VERSION
+curl -H "X-GPG-PASSPHRASE:$BINTRAY_GPG_PASSPHRASE" -u $BINTRAY_USER:$BINTRAY_API_KEY -X POST https://api.bintray.com/gpg/splnkit/maven/java-common/versions/$VERSION
 
 # Sync the repository with Maven Central
 curl -H "Content-Type: application/json" -u $BINTRAY_USER:$BINTRAY_API_KEY -X POST -d '{"username":"'$MAVEN_CENTRAL_USER_TOKEN'","password":"'$MAVEN_CENTRAL_TOKEN_PASSWORD'","close":"1"}' https://api.bintray.com/maven_central_sync/splunk/maven/java-common/versions/$VERSION

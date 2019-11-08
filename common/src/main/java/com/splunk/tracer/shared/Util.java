@@ -2,7 +2,7 @@ package com.splunk.tracer.shared;
 
 import com.splunk.tracer.transport.KeyValue;
 import com.splunk.tracer.transport.Timestamp;
-// import java.sql.Timestamp;
+
 import java.math.BigInteger;
 import java.util.Random;
 

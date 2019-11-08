@@ -7,11 +7,11 @@
     <groupId>com.splunk.tracer</groupId>
     <artifactId>java</artifactId>
     <packaging>pom</packaging>
-    <version>0.17.2</version>
+    <version>0.0.5</version>
 
     <name>Splunk Tracer Java Common (parent)</name>
     <description>Splunk Tracer Java Common (parent)</description>
-    <url>https://github.com/splunk/splunk-tracer-java-common</url>
+    <url>https://github.com/splnkit/splunk-tracer-java-common</url>
 
     <organization>
         <name>Splunk</name>
@@ -29,20 +29,21 @@
         <developer>
             <id>splunk</id>
             <name>Splunk</name>
-            <email>dev@splunk.com</email>
+            <email>gburgett@splunk.com</email>
         </developer>
     </developers>
 
     <scm>
-        <connection>https://github.com/splunk/splunk-tracer-java-common</connection>
-        <developerConnection>https://github.com/splunk/splunk-tracer-java-common</developerConnection>
-        <url>https://github.com/splunk/splunk-tracer-java-common</url>
+        <connection>https://github.com/splnkit/splunk-tracer-java-common</connection>
+        <developerConnection>https://github.com/splnkit/splunk-tracer-java-common</developerConnection>
+        <url>https://github.com/splnkit/splunk-tracer-java-common</url>
     </scm>
 
     <distributionManagement>
         <repository>
-            <id>splunk-bintray</id>
-            <url>https://api.bintray.com/maven/splunk/maven/java-common/;publish=1</url>
+            <id>bintray-splnkit-splunktracing</id>
+            <name>splnkit-splunktracing</name>
+            <url>https://api.bintray.com/maven/splnkit/splunktracing/java/;publish=1</url>
         </repository>
     </distributionManagement>
 
