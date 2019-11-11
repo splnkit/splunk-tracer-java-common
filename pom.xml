@@ -7,7 +7,7 @@
     <groupId>com.splunk.tracer</groupId>
     <artifactId>java</artifactId>
     <packaging>pom</packaging>
-    <version>0.0.5</version>
+    <version>0.1.0</version>
 
     <name>Splunk Tracer Java Common (parent)</name>
     <description>Splunk Tracer Java Common (parent)</description>

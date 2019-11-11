@@ -10,11 +10,11 @@ import java.io.InputStreamReader;
 
 public final class ReportResponse { 
    
-  	private final int code_;
+  	private final long code_;
 
     private final String text_;
 
-	public int getCode() {
+	public long getCode() {
 	    return code_;
 	}
 
@@ -32,17 +32,17 @@ public final class ReportResponse {
 
     public static class ReportResponseBuilder {
 
-        private int code_;
+        private long code_;
         private String text_;    //required
 
         public ReportResponseBuilder() {
         }
 
-        public ReportResponseBuilder(int code, String text) {
+        public ReportResponseBuilder(long code, String text) {
             this.code_ = code;
             this.text_ = text;
         }
-        public ReportResponseBuilder setCode(int code) {
+        public ReportResponseBuilder setCode(long code) {
             this.code_ = code;
             return this;
         }
@@ -73,7 +73,7 @@ public final class ReportResponse {
                     }
                 }
             JSONObject json_obj = (JSONObject) parser.parse(stringBuilder.toString());
-            return ReportResponse.ReportResponseBuilder().setCode((int) json_obj.get("code")).setText((String) json_obj.get("text")).build();
+            return ReportResponse.ReportResponseBuilder().setCode((long) json_obj.get("code")).setText((String) json_obj.get("text")).build();
         }
         catch(org.json.simple.parser.ParseException e) {
             e.printStackTrace();

@@ -515,6 +515,10 @@ public abstract class AbstractTracer implements Tracer, Closeable {
             }
         }
 
+        if (spans.size() == 0) {
+            return ReportResult.Success();
+        }
+
         ReportRequest request = ReportRequest.ReportRequestBuilder()
                 .setReporter(reporter)
                 .setAuth(auth)
@@ -535,8 +539,9 @@ public abstract class AbstractTracer implements Tracer, Closeable {
             return ReportResult.Error(spans.size());
         }
 
-        if (response.getText() != "Success") {
-            String err = response.getText();
+        String err = response.getText();
+        if (!err.equals("Success")) {
+            // String err = response.getText();
             this.error("Collector response contained error: ", err);
             return ReportResult.Error(spans.size());
         }
